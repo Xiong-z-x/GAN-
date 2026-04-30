@@ -1,0 +1,29 @@
+name: main_gan_env
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - numpy
+  - pillow
+  - scipy
+  - matplotlib
+  - tqdm
+  - pandas
+  - scikit-image
+  - pip:
+      - torch
+      - torchvision
+      - torchaudio
+      - click
+      - requests
+      - ninja
+      - imageio
+      - imageio-ffmpeg
+      - opencv-python
+      - dominate
+      - gputil
+      - pytorch-fid
+

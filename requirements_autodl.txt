@@ -1,0 +1,13 @@
+click
+requests
+ninja
+imageio
+imageio-ffmpeg
+scipy
+tqdm
+pillow
+numpy
+matplotlib
+opencv-python-headless
+dominate
+pytorch-fid

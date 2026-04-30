@@ -1,0 +1,22 @@
+name: cycle_env
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - numpy
+  - pillow
+  - scipy
+  - matplotlib
+  - tqdm
+  - pip:
+      - torch
+      - torchvision
+      - dominate
+      - visdom
+      - wandb
+      - opencv-python
+      - pytorch-fid
+

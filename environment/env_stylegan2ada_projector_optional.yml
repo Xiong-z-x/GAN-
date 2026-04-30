@@ -1,0 +1,21 @@
+name: sg2ada_projector_env
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+dependencies:
+  - python=3.7
+  - pip
+  - numpy
+  - pillow
+  - scipy
+  - requests
+  - tqdm
+  - pip:
+      - torch==1.7.1
+      - torchvision==0.8.2
+      - click
+      - pyspng
+      - ninja
+      - imageio-ffmpeg==0.4.3
+
