@@ -142,3 +142,22 @@
 - 已修复一键流水线首次运行问题：
   - `check_sota_ready.py` 默认不再强制要求增强模块输入图。
   - 只有使用 `--strict-input` 时才要求 `data/processed/style_transfer_inputs/` 已有图片。
+
+### 2026-04-30 GitHub 上传前自检
+
+- 已确认 GitHub 远端绑定：
+  - 仓库：`https://github.com/Xiong-z-x/GAN-.git`
+  - 分支：`main`
+  - 权限：具备 push 权限
+- 发现并修复 `README.md` 编码异常和内容过短问题。
+- 已完善 `.gitignore`，默认不上传数据集、个人照片、外部仓库、模型权重、实验输出、缓存和本地 agent 学习日志。
+- 已新增 `.gitattributes`，固定脚本和文档换行策略。
+- 已新增 `项目自检报告.md`，记录文件边界、技术路线风险、代码脚本检查和 GitHub 绑定检查。
+- 已执行 GitHub 上传前核验：
+  - `python -m compileall src scripts` 通过。
+  - 所有 `scripts/*.sh` 的 `bash -n` 检查通过。
+  - Python 入口 `--help` 检查通过。
+  - DCGAN 前向形状检查通过。
+  - 临时输入准备与临时输出检查通过。
+  - 文本文件 UTF-8 读取检查通过。
+  - `git diff --check` 未发现空白错误。
