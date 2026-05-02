@@ -31,6 +31,7 @@ outputs/**
 !outputs/**/.gitkeep
 
 GAN_results_images/
+release_assets/
 
 report/report_assets/**
 !report/report_assets/
