@@ -30,6 +30,8 @@ outputs/**
 !outputs/**/
 !outputs/**/.gitkeep
 
+GAN_results_images/
+
 report/report_assets/**
 !report/report_assets/
 !report/report_assets/.gitkeep
