@@ -59,6 +59,7 @@ def set_cell_text(cell, text: str, *, bold: bool = False, size: float = 9) -> No
 
 
 def add_cover(document: Document) -> None:
+    # 封面信息与课程作业提交内容保持一致，便于最终导出后直接交付。
     paragraph = document.add_paragraph()
     paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
     run = paragraph.add_run("深度学习课程大作业实验报告")
@@ -72,6 +73,8 @@ def add_cover(document: Document) -> None:
     set_paragraph_spacing(paragraph, after=48)
 
     info = [
+        "姓名：熊振兴",
+        "学号：2023302121197",
         "核心任务：真实人像生成",
         "基础模型：手写 DCGAN baseline",
         "复现模型：StyleGAN3 官方 FFHQ 预训练权重",
@@ -310,6 +313,18 @@ def main() -> None:
 
     package_docx = PACKAGE_DIR / FINAL_DOCX.name
     package_docx.write_bytes(FINAL_DOCX.read_bytes())
+    # 将正文之外的说明文件一并同步进最终包，方便后续直接提交或压缩传输。
+    for source in [
+        REPORT_MD,
+        ROOT / "报告素材使用说明.md",
+        ROOT / "最终提交清单.md",
+        ROOT / "代码附录.md",
+        ROOT / "文件说明.md",
+        ROOT / "README.md",
+        ROOT / "AutoDL_运行指南.md",
+    ]:
+        target = PACKAGE_DIR / source.name
+        target.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
 
     media_count = 0
     with zipfile.ZipFile(FINAL_DOCX) as archive:

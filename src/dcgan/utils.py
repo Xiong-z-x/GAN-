@@ -55,9 +55,9 @@ def save_samples(
 ) -> None:
     """保存固定噪声生成的样例图。"""
 
+    was_training = generator.training
     generator.eval()
     fake_images = generator(fixed_noise).detach().cpu()
     ensure_dir(Path(output_path).parent)
     save_image(fake_images, output_path, normalize=True, value_range=(-1, 1), nrow=nrow)
-    generator.train()
-
+    generator.train(was_training)

@@ -6,7 +6,6 @@ repo_dir="${CYCLEGAN_REPO:-${project_root}/external/pytorch-CycleGAN-and-pix2pix
 input_dir="${CYCLEGAN_INPUT_DIR:-${project_root}/data/processed/style_transfer_inputs}"
 out_dir="${CYCLEGAN_RESULTS_DIR:-${project_root}/outputs/cyclegan_style}"
 model_name="${CYCLEGAN_MODEL_NAME:-style_vangogh}"
-gpu_ids="${CYCLEGAN_GPU_IDS:-0}"
 num_test="${CYCLEGAN_NUM_TEST:-50}"
 
 if [ ! -f "${repo_dir}/test.py" ]; then
@@ -29,7 +28,8 @@ python test.py \
   --model test \
   --no_dropout \
   --num_test "${num_test}" \
-  --gpu_ids "${gpu_ids}" \
-  --results_dir "${out_dir}"
+  --results_dir "${out_dir}" \
+  --preprocess resize \
+  --load_size 256
 
 echo "CycleGAN 风格迁移完成：${out_dir}"

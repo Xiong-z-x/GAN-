@@ -2,9 +2,9 @@
 
 ## 摘要
 
-本项目围绕深度学习课程中的生成对抗网络（Generative Adversarial Network, GAN）展开，核心任务是真实人像生成，扩展任务为人像动漫化与艺术风格迁移。为了体现从基础理论到工程复现的学习过程，实验采用循序渐进的技术路线：首先手写并训练 DCGAN baseline，在标准公开数据集 CelebA 上验证基础 GAN 的生成能力；随后复现 NVIDIA StyleGAN3 官方 FFHQ 预训练模型，展示现代 style-based GAN 在高质量真实人像生成上的优势；最后使用 AnimeGANv2 与 CycleGAN 对个人照片和生成头像进行动漫化、浮世绘、莫奈和梵高风格迁移，呼应课程中 CycleGAN 与非成对图像翻译的重点内容。
+本项目围绕深度学习课程中的生成对抗网络（Generative Adversarial Network, GAN）展开，核心任务是真实人像生成，扩展任务为人像动漫化与艺术风格迁移。为了体现“从课程理论到工程复现”的学习过程，实验采用循序渐进的技术路线：先手写并训练 DCGAN baseline，在标准公开数据集 CelebA 上验证基础 GAN 的生成能力；再复现 NVIDIA StyleGAN3 官方 FFHQ 预训练模型，展示现代 style-based GAN 在高质量真实人像生成上的优势；最后使用 AnimeGANv2 与 CycleGAN 对个人照片和生成头像进行动漫化、浮世绘、莫奈和梵高风格迁移，呼应课程中 CycleGAN 与非成对图像翻译的重点内容。
 
-实验在 AutoDL GPU 环境中完成。DCGAN 使用 CelebA Align&Cropped 数据集处理得到的 `CelebA_64` 训练 60 个 epoch，并使用 10000 张生成图计算得到 `FID = 23.1820`。StyleGAN3 使用官方 FFHQ 预训练权重生成 1024 张高质量人像，并生成潜空间插值视频。由于 StyleGAN3 的训练域为 FFHQ，而本实验中用于 FID 对比的真实集为 CelebA_64，二者在人脸裁剪方式、分辨率和数据分布上均不一致，因此 StyleGAN3 的跨域 `FID = 216.2482` 只作为参考，不作为公平模型排序依据。实验结果表明：手写 DCGAN 能够学习 CelebA 的基本人脸分布，但在清晰度、稳定性和细节方面仍有限；StyleGAN3 在真实感、多样性和潜空间连续性方面显著优于基础 DCGAN；AnimeGANv2 和 CycleGAN 则提供了面向个人照片展示的应用扩展。
+实验在 AutoDL GPU 环境中完成。DCGAN 使用 CelebA Align&Cropped 数据集处理得到的 `CelebA_64` 训练 60 个 epoch，并使用 10000 张生成图计算得到 `FID = 23.1820`。StyleGAN3 使用官方 FFHQ 预训练权重生成 1024 张高质量人像，并生成潜空间插值视频。由于 StyleGAN3 的训练域为 FFHQ，而本实验中用于 FID 对比的真实集为 CelebA_64，二者在人脸裁剪方式、分辨率和数据分布上并不一致，因此 StyleGAN3 的跨域 `FID = 216.2482` 只作为参考，不作为公平模型排序依据。为了增强课程展示效果，报告中的图片统一采用 4x4 或 2x4 的清晰拼图，避免 8x8 64 小图过于密集。实验结果表明：手写 DCGAN 能够学习 CelebA 的基本人脸分布，但在清晰度、稳定性和细节方面仍有限；StyleGAN3 在真实感、多样性和潜空间连续性方面显著优于基础 DCGAN；AnimeGANv2 和 CycleGAN 则提供了面向个人照片展示的应用扩展。
 
 关键词：GAN；DCGAN；StyleGAN3；CelebA；FFHQ；AnimeGANv2；CycleGAN；FID
 
@@ -67,6 +67,17 @@ AnimeGANv2 和 CycleGAN 的输入由两部分组成：
 2. StyleGAN3 生成头像，用于补充样例数量，使报告展示更充分。
 
 这种设计保证增强模块不依赖大量私有数据，同时能展示不同输入下的稳定性。
+
+### 2.5 报告素材组织原则
+
+为了让图片更适合课程汇报而不是仅适合离线浏览，本文对结果图做了二次筛选和重排，原则如下：
+
+1. DCGAN 不再直接放 8x8 的大拼图，而是改成 4x4 的训练递进图和 4x4 的终态样例图。
+2. StyleGAN3 采用 4x4 选样展示高质量真实人像，而不是把 1024 张结果全部铺开。
+3. AnimeGANv2 保持 4x4 对比图，突出“原图-三种风格”的差异。
+4. CycleGAN 将梵高、莫奈和浮世绘三个风格分开展示，每个风格使用 2x4 组合图，便于看清原图与迁移图的对应关系。
+
+这种处理方式的目的不是减少素材，而是提高素材的可读性和汇报效率。
 
 ## 3. 技术路线总览
 
@@ -167,7 +178,7 @@ output: real/fake logit
 
 训练过程中固定一组随机噪声，每隔一定 epoch 保存生成图。图 1 展示了从第 1、10、20、30、40、50 到第 60 轮的变化。
 
-![图1 DCGAN 固定噪声训练过程，从左到右依次为 epoch 1、10、20、30、40、50、60。](GAN_results_images/final_images_package/report/selected_figures/fig01_dcgan_progress.png)
+![图1 DCGAN 固定噪声训练过程。本文从 4 个代表性 latent 位置出发，抽取第 1、10、30、60 轮样本并重排为 4x4 拼图。](GAN_results_images/final_images_package/report/selected_figures/fig01_dcgan_progress.png)
 
 可以观察到：
 
@@ -179,9 +190,9 @@ output: real/fake logit
 
 ### 4.5 DCGAN 生成样例
 
-图 2 展示了多组 DCGAN 生成样例。
+图 2 展示了 DCGAN 最终轮次的 16 张代表性生成样例。
 
-![图2 DCGAN 生成样例网格。](GAN_results_images/final_images_package/report/selected_figures/fig02_dcgan_generated_grids.png)
+![图2 DCGAN 生成样例网格。为避免 8x8 小图过密，本文仅抽取最终 epoch 的 16 张代表样本重排展示。](GAN_results_images/final_images_package/report/selected_figures/fig02_dcgan_generated_grids.png)
 
 从结果看，DCGAN 已经能够生成多样化的人脸，包括不同发型、肤色、姿态和背景。但与真实照片相比，部分样本仍有明显问题：局部五官变形、脸部边缘不自然、背景混杂和纹理粗糙。这些问题说明 DCGAN 适合作为 baseline，但不适合作为最终高质量真实人像生成方案。
 
@@ -217,9 +228,9 @@ scripts/run_stylegan3_video.sh
 
 ### 5.3 StyleGAN3 生成结果
 
-图 3 展示了 StyleGAN3 生成的多张真实人像样例。
+图 3 展示了 StyleGAN3 生成的 16 张代表性真实人像样例。
 
-![图3 StyleGAN3 官方 FFHQ 预训练权重生成的人像样例。](GAN_results_images/final_images_package/report/selected_figures/fig03_stylegan3_samples.png)
+![图3 StyleGAN3 官方 FFHQ 预训练权重生成的人像样例。本文不再铺开 1024 张结果，而是抽取 16 张具有代表性的样本用于展示。](GAN_results_images/final_images_package/report/selected_figures/fig03_stylegan3_samples.png)
 
 与 DCGAN 相比，StyleGAN3 的提升非常明显：
 
@@ -252,7 +263,7 @@ GAN_results_images/final_images_package/outputs/stylegan3/latent_interpolation.m
 - `face_paint_v1`
 - `paprika`
 
-图 4 展示了多组输入与不同 AnimeGANv2 风格的对比。每一组从左到右依次为原图、`face_paint_v2`、`face_paint_v1`、`paprika`。
+图 4 展示了多组输入与不同 AnimeGANv2 风格的对比。每一组从左到右依次为原图、`face_paint_v2`、`face_paint_v1`、`paprika`。为了突出“同一输入在不同风格下的变化”，本文只选取 4 个代表性输入样本构成 4x4 组合图。
 
 ![图4 AnimeGANv2 多风格动漫化对比。](GAN_results_images/final_images_package/report/selected_figures/fig04_animegan2_comparison.png)
 
@@ -286,11 +297,15 @@ CycleGAN 是非成对图像翻译的经典模型。它通过两个方向的生�
 
 ### 7.2 风格迁移结果
 
-图 5 展示了原图与 Ukiyoe 风格迁移结果的对比。
+图 5、图 6 和图 7 分别展示了梵高、莫奈和浮世绘三种风格迁移结果。每张图都采用 2x4 组合图，左列为原图，右列为对应的风格迁移结果。
 
-![图5 CycleGAN Ukiyoe 风格迁移对比。](GAN_results_images/final_images_package/report/selected_figures/fig05_cyclegan_ukiyoe_comparison.png)
+![图5 CycleGAN Van Gogh 风格迁移对比。](GAN_results_images/final_images_package/report/selected_figures/fig05_cyclegan_vangogh_comparison.png)
 
-结果显示，CycleGAN 能够显著改变图像的色彩、线条和整体纹理，使输入头像具有明显艺术风格。与 AnimeGANv2 相比，CycleGAN 的风格迁移更偏向整体色彩和纹理域转换，而不是专门优化二次元人脸特征。
+![图6 CycleGAN Monet 风格迁移对比。](GAN_results_images/final_images_package/report/selected_figures/fig06_cyclegan_monet_comparison.png)
+
+![图7 CycleGAN Ukiyoe 风格迁移对比。](GAN_results_images/final_images_package/report/selected_figures/fig07_cyclegan_ukiyoe_comparison.png)
+
+结果显示，CycleGAN 能够显著改变图像的色彩、线条和整体纹理，使输入头像具有明显艺术风格。Van Gogh 更强调粗犷笔触和色块，Monet 更强调光照与柔和色调，Ukiyoe 更强调平面化线条和木版画质感。与 AnimeGANv2 相比，CycleGAN 的风格迁移更偏向整体色彩和纹理域转换，而不是专门优化二次元人脸特征。
 
 ### 7.3 局限
 
@@ -332,7 +347,7 @@ C:\GAN\GAN_results_images\final_images_package
 
 | 类别 | 数量或状态 |
 |---|---:|
-| PNG 图片 | 7634 |
+| PNG 图片 | 7631 |
 | MP4 视频 | 2 |
 | FID/说明文本 | 7 |
 | Markdown 文档 | 7 |
@@ -343,6 +358,18 @@ C:\GAN\GAN_results_images\final_images_package
 | Anime 报告精选素材 | 180 |
 | CycleGAN Ukiyoe fake 图 | 36 |
 
+为避免 8x8 小图过密，本文最终报告主要使用以下 7 张视觉素材：
+
+| 图编号 | 文件 | 用途 |
+|---|---|---|
+| 图1 | `report/selected_figures/fig01_dcgan_progress.png` | 展示 DCGAN 训练递进过程 |
+| 图2 | `report/selected_figures/fig02_dcgan_generated_grids.png` | 展示 DCGAN 终态样例 |
+| 图3 | `report/selected_figures/fig03_stylegan3_samples.png` | 展示 StyleGAN3 高质量人像 |
+| 图4 | `report/selected_figures/fig04_animegan2_comparison.png` | 展示 AnimeGANv2 多风格动漫化 |
+| 图5 | `report/selected_figures/fig05_cyclegan_vangogh_comparison.png` | 展示 CycleGAN 梵高风格迁移 |
+| 图6 | `report/selected_figures/fig06_cyclegan_monet_comparison.png` | 展示 CycleGAN 莫奈风格迁移 |
+| 图7 | `report/selected_figures/fig07_cyclegan_ukiyoe_comparison.png` | 展示 CycleGAN 浮世绘风格迁移 |
+
 报告中建议使用如下素材：
 
 | 图编号 | 文件 | 用途 |
@@ -351,7 +378,9 @@ C:\GAN\GAN_results_images\final_images_package
 | 图2 | `report/selected_figures/fig02_dcgan_generated_grids.png` | 展示 DCGAN baseline 生成能力 |
 | 图3 | `report/selected_figures/fig03_stylegan3_samples.png` | 展示 StyleGAN3 高质量人像 |
 | 图4 | `report/selected_figures/fig04_animegan2_comparison.png` | 展示 AnimeGANv2 多风格动漫化 |
-| 图5 | `report/selected_figures/fig05_cyclegan_ukiyoe_comparison.png` | 展示 CycleGAN 风格迁移 |
+| 图5 | `report/selected_figures/fig05_cyclegan_vangogh_comparison.png` | 展示 CycleGAN 梵高风格迁移 |
+| 图6 | `report/selected_figures/fig06_cyclegan_monet_comparison.png` | 展示 CycleGAN 莫奈风格迁移 |
+| 图7 | `report/selected_figures/fig07_cyclegan_ukiyoe_comparison.png` | 展示 CycleGAN 浮世绘风格迁移 |
 
 ## 10. 失败现象与反思
 
@@ -403,6 +432,17 @@ AnimeGANv2 和 CycleGAN 的输出适合展示，但不适合做人脸身份保�
 
 从学习角度看，本项目的价值不只在于得到若干生成图，而在于形成了清晰的递进关系：基础模型用于理解 GAN 原理，SOTA 复现用于观察现代 GAN 能力，增强模块用于连接课程中的 CycleGAN 知识点，FID 和失败样例用于支撑客观分析。后续若继续改进，可以尝试更稳定的 GAN 训练策略、StyleGAN 官方同域指标计算、StyleGAN projector 个人照片投影，以及更强的人脸身份保持风格迁移模型。
 
+## 14. 附录：代码说明与文件结构
+
+代码细节单独整理在 `代码附录.md`，文件职责总表整理在 `文件说明.md`。这样做的目的是把“报告正文”“代码说明”“文件结构”分开，方便老师按不同维度检查，也方便后续接手项目的人直接定位到对应文件。
+
+阅读建议如下：
+
+1. 先看 `README.md`，快速理解项目主线。
+2. 再看 `技术路线_最终方案.md`，理解为什么选择“手写 DCGAN + SOTA 复现 + 风格迁移增强”的组合。
+3. 然后看 `代码附录.md`，按阶段查看每份代码的作用、输入输出和关键点。
+4. 最后看 `GAN_真实人像生成实验报告.md` 正文和 `报告素材使用说明.md`，把结果、素材和结论串起来。
+
 ## 参考文献与开源来源
 
 [1] I. Goodfellow et al., "Generative adversarial nets," in *Advances in Neural Information Processing Systems*, 2014.
@@ -426,4 +466,3 @@ AnimeGANv2 和 CycleGAN 的输出适合展示，但不适合做人脸身份保�
 [10] B. Lee, "animegan2-pytorch." [Online]. Available: https://github.com/bryandlee/animegan2-pytorch
 
 [11] M. Seitzer, "pytorch-fid." [Online]. Available: https://github.com/mseitzer/pytorch-fid
-

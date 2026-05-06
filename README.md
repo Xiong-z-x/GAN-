@@ -1,238 +1,153 @@
-# GAN 真实人像生成大作业
+# GAN 真实人像生成课程项目
 
-本项目用于完成深度学习课程大作业。核心任务是真实人像生成，增强任务是动漫化与风格迁移展示。项目坚持 GAN 主线，不把 diffusion 模型作为核心方案。
+本项目用于深度学习课程大作业，主线是**基于 GAN 的真实人像生成**，扩展为**动漫化、艺术风格迁移和输入人脸身份保持应用**。当前仓库已进入“迁移前封板”状态：源码、文档和少量代表性交接素材适合提交 GitHub；大数据集、外部仓库、模型权重和完整结果包不直接提交。
 
-## 1. 项目目标
+## 当前总路线
 
-本项目最终交付内容包括：
+| 层级 | 模块 | 定位 | 当前状态 |
+|---|---|---|---|
+| 课程 baseline | DCGAN / DCGAN++ | 手写 GAN 训练、展示基础生成能力和改进尝试 | 代码已实现，AutoDL 已跑过 E0/E1，E2 有中断/续训历史 |
+| 高质量 GAN 上限 | StyleGAN3 | 使用 NVIDIA 官方 FFHQ 预训练权重展示成熟 GAN 质量上限 | 已生成代表性人像与交接展示图 |
+| GAN 风格迁移 | AnimeGANv2 / CycleGAN | 动漫风格、梵高/莫奈/浮世绘等风格迁移 | 已跑过多权重/多风格结果，脚本已兼容当前 CycleGAN 参数 |
+| 身份保持应用 | InstantID + 可选 GFPGAN | 输入个人人脸，生成不同姿态、造型和场景；GFPGAN 后续作为修复增强 | InstantID 已有展示成果；GFPGAN 仍是待验证增强 |
+| 应用封装 | FaceGAN Studio | Gradio Web 程序，统一入口展示和调用上述能力 | 第一版代码已加入，需在 AutoDL 环境继续验证重模型功能 |
 
-- 设计文档：技术路线、模型选择、数据集选择和实验设计。
-- 实验代码：手写 DCGAN baseline、SOTA 复现脚本、增强模块脚本。
-- 实验结果：生成图、插值视频、动漫化结果、风格迁移结果。
-- 实验报告：模型结构说明、结果对比、指标分析、失败案例和伦理说明。
+严格边界：
 
-## 2. 技术路线
+- DCGAN / DCGAN++ 是课程基础 GAN 展示，不应被包装成接近 StyleGAN3 的高质量人脸生成器。
+- StyleGAN3 使用官方 FFHQ 预训练权重，是高质量 GAN 上限展示，不是本项目从零训练成果。
+- AnimeGANv2 / CycleGAN 是风格迁移增强模块，不参与 DCGAN FID 主指标排序。
+- InstantID 属于身份保持 diffusion 应用扩展，用于“我的脸 + 不同姿态/造型”，不是 GAN baseline。
 
-主线采用“基础模型 + 前沿模型 + 增强展示”的结构：
+## 迁移与接手入口
 
-1. 手写 DCGAN baseline：在 CelebA 64x64 人脸图像上训练，体现课程中 GAN 基础知识。
-2. StyleGAN3 官方预训练复现：使用 NVIDIA 官方 FFHQ 预训练权重生成高质量真实人像。
-3. AnimeGANv2 动漫化：对个人照片或 StyleGAN3 生成人像做动漫化展示。
-4. CycleGAN 风格迁移：使用官方 CycleGAN/pix2pix 仓库与官方风格预训练模型，呼应课堂重点。
-5. StyleGAN2-ADA projector：作为可选增强模块，不作为主线成败条件。
+后续推荐使用 VS Code / Cursor 的 Remote-SSH 直接进入 AutoDL。源码同步优先走 GitHub，而不是反复打包压缩。
 
-关键边界：
+AutoDL 项目目录约定：
 
-- 个人照片不作为 GAN 训练集，只用于 demo、动漫化、风格迁移和可选 projector。
-- StyleGAN 系列不从零训练，只做官方预训练权重复现。
-- CycleGAN 官方预训练列表没有 face/CelebA/FFHQ 人像域模型，因此人像域 CycleGAN 自训只作为加分项。
-- 两天内优先保证可复现实验结果，不把高风险长训练放在主线。
+```text
+/root/autodl-tmp/GAN
+```
 
-## 3. 推荐 AutoDL 配置
+新会话或新接手模型必须优先阅读：
 
-本项目按以下配置规划：
+1. `docs/handoff/新对话初始化提示词.md`
+2. `docs/handoff/迁移前交接总报告.md`
+3. `docs/handoff/后续模型注意事项.md`
+4. `AutoDL_运行指南.md`
+5. `FaceGAN_Studio_运行说明.md`
+6. `代码附录.md`
 
-| 项目 | 配置 |
-|---|---|
-| GPU | RTX 4090D 24GB x1 |
-| CUDA | 12.8 |
-| PyTorch | 2.8.0 |
-| Python | 3.12 镜像，必要时创建 Python 3.10/3.11 环境 |
-| 内存 | 60GB |
-| 数据盘 | 50GB SSD |
+## 目录结构
 
-50GB 数据盘不适合下载 FFHQ 1024 全量图像，因此本项目默认依赖官方预训练权重和轻量数据子集。
+| 路径 | 作用 | GitHub 策略 |
+|---|---|---|
+| `src/dcgan/` | 手写 DCGAN / DCGAN++ 训练代码 | 提交 |
+| `scripts/` | 数据准备、模型调用、报告整理、监控脚本 | 提交 |
+| `facegan_studio/` | Gradio Web 应用封装 | 提交 |
+| `docs/superpowers/` | FaceGAN Studio 设计与实施计划 | 提交 |
+| `docs/handoff/` | 迁移交接、经验、下个模型初始化提示词 | 提交 |
+| `docs/handoff_assets/` | 少量代表性展示图，便于 AutoDL 从 GitHub 直接看到成果 | 提交 |
+| `environment/` | 环境配置建议 | 提交 |
+| `最终报告/` | Word/PDF 最终报告 | 提交 |
+| `data/` | 原始数据和中间数据 | 不提交 |
+| `outputs/` | 训练和推理结果 | 不提交 |
+| `report/report_assets/` | 大量报告素材 | 不提交 |
+| `external/` | 第三方官方仓库 | 不提交 |
+| `GAN_results_images/` | 完整结果包 | 不提交 |
+| `GAN_new_showcase_results/` | 新展示结果包 | 不提交 |
 
-## 4. AutoDL 最短运行方式
+## AutoDL 快速启动
 
-把项目上传到 AutoDL 后，进入项目根目录：
+在 AutoDL 上从 GitHub 拉取或更新源码：
+
+```bash
+cd /root/autodl-tmp
+git clone https://github.com/Xiong-z-x/GAN-.git GAN
+cd /root/autodl-tmp/GAN
+sed -i 's/\r$//' scripts/*.sh
+chmod +x scripts/*.sh
+```
+
+如果 AutoDL 上已经有项目目录：
 
 ```bash
 cd /root/autodl-tmp/GAN
+git status --short
+git pull --ff-only
+sed -i 's/\r$//' scripts/*.sh
+chmod +x scripts/*.sh
 ```
 
-运行 SOTA 与增强模块一键流水线：
+安装依赖时不要随意重装 PyTorch：
 
 ```bash
-bash scripts/run_sota_enhanced_pipeline.sh
+pip install -r requirements_autodl.txt
 ```
 
-该命令会自动执行：
+完整运行细节见 `AutoDL_运行指南.md`。
 
-1. 安装非 PyTorch 依赖。
-2. 克隆外部官方仓库。
-3. 检查 SOTA 模块运行条件。
-4. 使用 StyleGAN3 官方 FFHQ 预训练权重生成真实人像。
-5. 生成 StyleGAN3 潜空间插值视频。
-6. 准备 AnimeGANv2 和 CycleGAN 输入。
-7. 运行 AnimeGANv2 动漫化。
-8. 运行 CycleGAN 官方预训练风格迁移。
-9. 收集报告素材。
-10. 检查输出结果。
+## FaceGAN Studio
 
-如果 `data/raw/my_photos/` 中有个人照片，增强模块会优先使用个人照片。如果没有个人照片，会使用 StyleGAN3 生成的人像作为输入，保证流程可跑通。
+启动：
 
-更详细的 AutoDL 说明见：
+```bash
+cd /root/autodl-tmp/GAN
+bash scripts/run_facegan_studio.sh
+```
+
+默认端口：`7860`。
+
+输出目录：
 
 ```text
-AutoDL_运行指南.md
+outputs/facegan_studio/
+report/report_assets/facegan_studio/
 ```
 
-## 5. 分步运行
-
-准备外部官方仓库：
-
-```bash
-bash scripts/setup_external_repos.sh
-```
-
-检查 SOTA 模块运行条件：
-
-```bash
-python scripts/check_sota_ready.py
-```
-
-运行 StyleGAN3 官方预训练生成：
-
-```bash
-bash scripts/run_stylegan3_generate.sh
-bash scripts/run_stylegan3_video.sh
-```
-
-准备个人照片或生成人像作为增强模块输入：
-
-```bash
-python scripts/prepare_style_transfer_inputs.py --clear
-```
-
-运行 AnimeGANv2 与 CycleGAN：
-
-```bash
-bash scripts/run_animegan2_infer.sh
-bash scripts/run_cyclegan_pretrained_style.sh
-```
-
-收集报告素材：
-
-```bash
-python scripts/collect_report_assets.py
-```
-
-检查输出结果：
-
-```bash
-python scripts/verify_sota_outputs.py
-```
-
-## 6. DCGAN Baseline
-
-准备 CelebA 64x64 数据：
-
-```bash
-python scripts/prepare_celeba.py \
-  --source-dir data/raw/celeba \
-  --output-dir data/processed/celeba_64 \
-  --image-size 64
-```
-
-训练手写 DCGAN：
-
-```bash
-python -m src.dcgan.train \
-  --data-dir data/processed/celeba_64 \
-  --output-dir outputs/dcgan \
-  --epochs 25 \
-  --batch-size 128
-```
-
-快速调试：
-
-```bash
-python -m src.dcgan.train \
-  --data-dir data/processed/celeba_64 \
-  --output-dir outputs/dcgan_debug \
-  --epochs 1 \
-  --batch-size 32 \
-  --max-steps 5
-```
-
-## 7. 目录结构
+InstantID 模块需要本地已有：
 
 ```text
-src/dcgan/                         手写 DCGAN baseline
-scripts/                           数据处理、SOTA 复现和结果检查脚本
-environment/                       环境配置建议
-data/raw/                          原始数据占位目录
-data/processed/                    处理后数据占位目录
-outputs/                           实验输出占位目录
-report/                            报告骨架与报告素材目录
-external/                          外部官方仓库克隆位置
-参考思路/                          本地参考方案材料
+external/InstantID/checkpoints/ControlNetModel/diffusion_pytorch_model.safetensors
+external/InstantID/checkpoints/ip-adapter.bin
+external/InstantID/models/antelopev2/
 ```
 
-重要文档：
+并且需要 SDXL 基础模型目录。程序会按顺序查找：
 
-| 文件 | 作用 |
+```text
+INSTANTID_BASE_MODEL_DIR
+/root/autodl-fs/models/YamerMIX_v8
+/autodl-fs/data/models/YamerMIX_v8
+/root/autodl-fs/data/models/YamerMIX_v8
+```
+
+## 关键结果边界
+
+- DCGAN 旧主结果：CelebA_64 训练 60 epoch，10k 生成图 FID 记录为 `23.1820`。
+- StyleGAN3 跨域 FID 曾记录为 `216.2482`，但该结果是 FFHQ 生成图对 CelebA_64 真实集的跨域参考，不能用于说明 StyleGAN3 质量差。
+- 新展示结果目录 `GAN_new_showcase_results/` 约 300MB，不提交 GitHub；其中 5 张代表图已复制到 `docs/handoff_assets/`。
+- 个人照片只用于推理展示，不进入训练集，不应上传到公开仓库。
+
+## 主要文档
+
+| 文件 | 用途 |
 |---|---|
-| `技术路线_最终方案.md` | 最终技术路线与方案论证 |
-| `项目完成进度.md` | 项目完成情况和下一步任务 |
-| `AutoDL_运行指南.md` | AutoDL 上的直接运行说明 |
-| `项目自检报告.md` | 进入 AutoDL 前的质疑式自检记录 |
-| `文件说明.md` | 当前各文件和目录的意义 |
-| `report/report_outline.md` | 实验报告骨架 |
-| `report/results_summary.md` | 实验结果汇总模板 |
+| `技术路线_最终方案.md` | 早期完整技术路线和事实边界 |
+| `GAN_真实人像生成实验报告.md` | 课程报告正文底稿 |
+| `代码附录.md` | 自写代码、脚本和模块说明 |
+| `报告素材使用说明.md` | 报告图片和素材用法 |
+| `最终提交清单.md` | 课程提交内容边界 |
+| `FaceGAN_Studio_运行说明.md` | Web 程序运行说明 |
+| `docs/handoff/迁移前交接总报告.md` | 当前封板总状态 |
+| `docs/handoff/后续模型注意事项.md` | 最容易出错的历史经验 |
+| `docs/handoff/新对话初始化提示词.md` | 下一个新会话可直接复制使用的初始化提示词 |
 
-## 8. 输出位置
+## 后续改进顺序
 
-```text
-outputs/dcgan/
-outputs/stylegan3/images/
-outputs/stylegan3/latent_interpolation.mp4
-outputs/animegan2/
-outputs/cyclegan_style/
-outputs/stylegan2ada_projector_optional/
-report/report_assets/
-```
-
-实际图片、视频、权重、数据集和外部仓库默认不上传 GitHub，只保留目录占位文件。
-
-## 9. 常用可调参数
-
-减少 StyleGAN3 生成数量：
-
-```bash
-STYLEGAN3_SEEDS=0-3 bash scripts/run_sota_enhanced_pipeline.sh
-```
-
-更换 CycleGAN 官方风格模型：
-
-```bash
-CYCLEGAN_MODEL_NAME=style_monet bash scripts/run_sota_enhanced_pipeline.sh
-```
-
-更换 AnimeGANv2 权重：
-
-```bash
-ANIMEGAN2_STYLE=face_paint_512_v2 bash scripts/run_sota_enhanced_pipeline.sh
-```
-
-缩短 StyleGAN3 视频：
-
-```bash
-STYLEGAN3_VIDEO_W_FRAMES=30 bash scripts/run_sota_enhanced_pipeline.sh
-```
-
-## 10. 本地验证状态
-
-当前已在本地完成以下检查：
-
-```text
-python -m compileall src scripts
-bash -n scripts/*.sh
-python 脚本 --help 检查
-DCGAN 前向形状检查
-临时图片输入准备检查
-临时输出结果检查
-```
-
-真实 StyleGAN3、AnimeGANv2、CycleGAN 推理需要在 AutoDL Linux GPU 环境中执行。
+1. 在 AutoDL Remote-SSH 环境确认 GitHub 拉取、依赖、外部仓库和本地模型路径。
+2. 启动 FaceGAN Studio，先验证不依赖重模型的页面、成果展示和证件照模块。
+3. 验证 AnimeGANv2 / CycleGAN 调用链，确保输出进入 `outputs/facegan_studio/`。
+4. 验证 InstantID 本地模型加载与 4/8 张姿态生成，必要时降低分辨率或步数。
+5. 再考虑接入 GFPGAN，先作为可选后处理，不要破坏已跑通的主流程。
+6. 最后更新实验报告，新增 FaceGAN Studio 应用封装章节和新结果图。

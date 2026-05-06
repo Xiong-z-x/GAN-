@@ -34,21 +34,25 @@ class FlatImageDataset(Dataset[Tensor]):
             return self.transform(image)
 
 
-def build_transform(image_size: int) -> transforms.Compose:
+def build_transform(image_size: int, *, augment: bool = False) -> transforms.Compose:
     """构建 DCGAN 训练使用的图像变换。"""
 
-    return transforms.Compose(
+    transform_steps: list[Callable[[Image.Image], Tensor] | transforms.Transform] = [
+        transforms.Resize(image_size),
+        transforms.CenterCrop(image_size),
+    ]
+    if augment:
+        transform_steps.append(transforms.RandomHorizontalFlip(p=0.5))
+    transform_steps.extend(
         [
-            transforms.Resize(image_size),
-            transforms.CenterCrop(image_size),
             transforms.ToTensor(),
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
         ]
     )
+    return transforms.Compose(transform_steps)
 
 
-def build_dataset(root: str | Path, image_size: int) -> FlatImageDataset:
+def build_dataset(root: str | Path, image_size: int, *, augment: bool = False) -> FlatImageDataset:
     """创建人脸图像数据集。"""
 
-    return FlatImageDataset(root=root, transform=build_transform(image_size))
-
+    return FlatImageDataset(root=root, transform=build_transform(image_size, augment=augment))

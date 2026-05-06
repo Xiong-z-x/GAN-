@@ -31,7 +31,9 @@ outputs/**
 !outputs/**/.gitkeep
 
 GAN_results_images/
+GAN_new_showcase_results/
 release_assets/
+handoff_large_assets/
 
 report/report_assets/**
 !report/report_assets/

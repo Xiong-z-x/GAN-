@@ -35,6 +35,7 @@ def main() -> None:
     if not image_paths:
         raise FileNotFoundError(f"未找到个人照片：{args.source_dir}")
 
+    # 统一把个人照片整理成适合后续推理的 PNG 形式。
     for index, image_path in enumerate(tqdm(image_paths, desc="整理个人照片")):
         target_path = args.output_dir / f"personal_{index:03d}.png"
         with Image.open(image_path) as image:
@@ -42,6 +43,7 @@ def main() -> None:
             image = resize_keep_ratio(image, args.max_side)
             image.save(target_path)
 
+    # 保留一份原始示例备份，避免后续输入整理时误删源图。
     backup_dir = args.output_dir / "原始示例备份"
     backup_dir.mkdir(parents=True, exist_ok=True)
     shutil.copy2(image_paths[0], backup_dir / image_paths[0].name)

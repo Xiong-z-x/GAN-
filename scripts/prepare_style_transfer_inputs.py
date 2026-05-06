@@ -49,14 +49,20 @@ def main() -> None:
 
     personal_images = list_images(args.personal_dir)
     generated_images = list_images(args.generated_dir)
-    source_images = personal_images if personal_images else generated_images
-    source_name = "个人照片" if personal_images else "StyleGAN3 生成图"
+    source_images = [*personal_images, *generated_images]
+    if personal_images and generated_images:
+        source_name = "个人照片 + StyleGAN3 生成图"
+    elif personal_images:
+        source_name = "个人照片"
+    else:
+        source_name = "StyleGAN3 生成图"
 
     if not source_images:
         raise FileNotFoundError(
             f"未找到输入图片。请放入个人照片到 {args.personal_dir}，或先运行 StyleGAN3 生成图。"
         )
 
+    # 个人照片优先；数量不足时继续补充 StyleGAN3 生成图，避免只有少量个人照片导致展示不足。
     selected_images = source_images[: args.max_images]
     for index, image_path in enumerate(tqdm(selected_images, desc=f"整理{source_name}")):
         target_path = args.output_dir / f"style_input_{index:03d}.png"
@@ -65,6 +71,7 @@ def main() -> None:
             image = resize_keep_ratio(image, args.max_side)
             image.save(target_path)
 
+    # 备份首张示例，方便报告里说明输入来源。
     backup_dir = args.output_dir.parent / "style_transfer_input_backup"
     backup_dir.mkdir(parents=True, exist_ok=True)
     shutil.copy2(selected_images[0], backup_dir / selected_images[0].name)

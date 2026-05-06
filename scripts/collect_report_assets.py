@@ -38,6 +38,7 @@ def main() -> None:
         for media_path in source.rglob("*"):
             if media_path.suffix.lower() not in MEDIA_SUFFIXES:
                 continue
+            # 用源目录名做前缀，避免不同模块导出的文件互相覆盖。
             relative_name = "_".join(media_path.relative_to(source).parts)
             target_path = args.output_dir / f"{source.name}_{relative_name}"
             shutil.copy2(media_path, target_path)
@@ -48,4 +49,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

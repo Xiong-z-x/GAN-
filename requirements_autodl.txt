@@ -11,3 +11,4 @@ matplotlib
 opencv-python-headless
 dominate
 pytorch-fid
+gradio
