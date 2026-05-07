@@ -108,6 +108,10 @@ def copy_files(paths: Iterable[str | Path], dest_dir: str | Path) -> list[Path]:
         src = Path(source)
         if src.exists() and src.is_file():
             out = dest / src.name
+            index = 1
+            while out.exists():
+                out = dest / f"{src.stem}_{index}{src.suffix}"
+                index += 1
             shutil.copy2(src, out)
             copied.append(out)
     return copied

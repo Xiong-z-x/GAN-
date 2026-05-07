@@ -9,7 +9,7 @@
 | 课程 baseline | DCGAN / DCGAN++ | 手写 GAN 训练、展示基础生成能力和改进尝试 | 代码已实现，AutoDL 已跑过 E0/E1，E2 有中断/续训历史 |
 | 高质量 GAN 上限 | StyleGAN3 | 使用 NVIDIA 官方 FFHQ 预训练权重展示成熟 GAN 质量上限 | 已生成代表性人像与交接展示图 |
 | GAN 风格迁移 | AnimeGANv2 / CycleGAN | 动漫风格、梵高/莫奈/浮世绘等风格迁移 | 已跑过多权重/多风格结果，脚本已兼容当前 CycleGAN 参数 |
-| 身份保持应用 | InstantID + 可选 GFPGAN | 输入个人人脸，生成不同姿态、造型和场景；GFPGAN 后续作为修复增强 | InstantID 已有展示成果；GFPGAN 仍是待验证增强 |
+| 身份保持应用 | InstantID + GFPGAN + 保脸轻造型 | 输入个人人脸，验证 InstantID 身份保持生成；GFPGAN 作为后处理；眼镜轻造型使用关键点叠加避免五官失真 | InstantID/GFPGAN 已在 AutoDL 验证；StyleGAN 反演路线因身份偏差已取消 |
 | 应用封装 | FaceGAN Studio | Gradio Web 程序，统一入口展示和调用上述能力 | 第一版代码已加入，需在 AutoDL 环境继续验证重模型功能 |
 
 严格边界：
@@ -18,6 +18,7 @@
 - StyleGAN3 使用官方 FFHQ 预训练权重，是高质量 GAN 上限展示，不是本项目从零训练成果。
 - AnimeGANv2 / CycleGAN 是风格迁移增强模块，不参与 DCGAN FID 主指标排序。
 - InstantID 属于身份保持 diffusion 应用扩展，用于“我的脸 + 不同姿态/造型”，不是 GAN baseline。
+- 轻造型保脸结果使用本人 4 张照片和人脸关键点叠加眼镜，不重绘五官；该模块用于满足“不失真”的展示要求，不应写成 GAN 或 InstantID 训练成果。
 
 ## 迁移与接手入口
 
@@ -147,8 +148,8 @@ INSTANTID_BASE_MODEL_DIR
 ## 后续改进顺序
 
 1. 在 AutoDL Remote-SSH 环境确认 GitHub 拉取、依赖、外部仓库和本地模型路径。
-2. 启动 FaceGAN Studio，先验证不依赖重模型的页面、成果展示和证件照模块。
+2. 启动 FaceGAN Studio，先验证不依赖重模型的页面、成果展示和上传预览模块。
 3. 验证 AnimeGANv2 / CycleGAN 调用链，确保输出进入 `outputs/facegan_studio/`。
-4. 验证 InstantID 本地模型加载与 4/8 张姿态生成，必要时降低分辨率或步数。
-5. 再考虑接入 GFPGAN，先作为可选后处理，不要破坏已跑通的主流程。
+4. 验证 InstantID 本地模型加载；若扩散结果出现身份漂移，报告中必须说明并优先使用保脸轻造型结果展示。
+5. GFPGAN 已接入为后处理增强，只能写作清晰化/修复工具，不能写作身份保持模型。
 6. 最后更新实验报告，新增 FaceGAN Studio 应用封装章节和新结果图。

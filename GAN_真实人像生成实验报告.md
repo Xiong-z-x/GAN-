@@ -382,6 +382,35 @@ C:\GAN\GAN_results_images\final_images_package
 | 图6 | `report/selected_figures/fig06_cyclegan_monet_comparison.png` | 展示 CycleGAN 莫奈风格迁移 |
 | 图7 | `report/selected_figures/fig07_cyclegan_ukiyoe_comparison.png` | 展示 CycleGAN 浮世绘风格迁移 |
 
+## 9.5 FaceGAN Studio AutoDL 实测补充
+
+在 2026-05-07 的 AutoDL 工作区 `/root/autodl-tmp/GAN` 中，项目新增的 FaceGAN Studio 应用封装已经完成一轮页面级验证。验证入口为：
+
+```bash
+FACEGAN_PORT=7860 bash scripts/run_facegan_studio.sh
+```
+
+页面启动后，使用 `curl --noproxy '*' -I http://127.0.0.1:7860/` 返回 `HTTP/1.1 200 OK`。由于 AutoDL 环境配置了本机代理，普通 `curl http://127.0.0.1:7860/` 可能得到代理侧 502，因此本地服务验证需要绕过代理。
+
+本轮先使用从 `docs/handoff_assets/stylegan3_top16_grid.png` 裁出的非个人单脸样例完成页面级验证，随后按课程展示要求改用 `data/raw/my_photos/` 中的 4 张本人照片做身份保持应用实验。个人照片仅保存在 AutoDL 本地 ignored 目录，不进入 GitHub。
+
+| 功能 | 实测结果 | 输出路径 |
+|---|---|---|
+| 项目成果展示 | 可读取 `docs/handoff_assets/` 中的 DCGAN、StyleGAN3 和 InstantID 代表图 | `docs/handoff_assets/` |
+| 上传图检测预览 | OpenCV 检测到人脸，输出 `(512, 512)` 预览图 | `outputs/facegan_studio/manual_verify/light_modules/preview/face_detected_preview.png` |
+| AnimeGANv2 + CycleGAN | AnimeGANv2 三权重和 CycleGAN Van Gogh 共输出 4 张结果，生成 `(1048, 256)` 拼图 | `outputs/facegan_studio/anime/20260507_181051/` |
+| InstantID 身份保持生成 | 使用本地 `external/InstantID` 与 `/root/autodl-fs/models/YamerMIX_v8` 完成推理；纯文生图和 img2img 都会带来不同程度写真化/身份漂移 | `outputs/facegan_studio/pose_style/20260507_203853/` |
+| 轻造型保脸结果 | 使用 4 张本人照片，按人脸关键点叠加原图、黑框、金属、圆框眼镜 4 组，不重绘五官、不改变脸型 | `outputs/facegan_studio/identity_accessory/20260507_204628/` |
+| GFPGAN 后处理 | `gfpgan==1.3.8` 已接入并实测，对既有人像生成图进行清晰化和修复，输出对比拼图 | `outputs/facegan_studio/gfpgan_postprocess/20260507_200337/` |
+
+图 8 展示了最终采用的“保脸轻造型”结果。每一行对应一张本人照片，每一列分别为原图、黑框眼镜、金属眼镜和圆框眼镜。该模块并不让扩散模型重新生成五官，而是使用 InsightFace/InstantID 已有的人脸关键点检测结果进行眼镜叠加，因此脸型、五官和原始图像内容保持不变。
+
+![图8 四张本人照片的轻造型保脸结果。为了避免身份漂移，本图只做眼镜叠加，不重绘人脸。](report/report_assets/facegan_studio/identity_accessory/20260507_204628/identity_accessory_grid.png)
+
+本轮还尝试了 StyleGAN2-ADA projector 的“人脸反演 + 潜空间编辑”路线，但短步数投影结果出现明显身份偏差，官方 projector 又需要额外下载 VGG16 感知模型且下载过程卡住。因此该模块已从 FaceGAN Studio 当前交付路线中取消，只保留 StyleGAN3 官方 FFHQ 预训练生成人像作为成熟 GAN 上限展示。这个结果也说明：GAN 潜空间反演在少量个人照片、无专门 encoder 和短时间约束下，很难稳定完成精确身份保持；InstantID/img2img 虽然也有身份漂移风险，但更适合作为输入人脸应用扩展。
+
+GFPGAN 已完成真实接入验证。需要注意的是，GFPGAN 是人脸修复与清晰化后处理工具，可能改变局部细节，不能被写成身份保持模型；报告中只把它作为生成结果的可选增强，而不作为 GAN 主实验或身份保持能力来源。
+
 ## 10. 失败现象与反思
 
 ### 10.1 DCGAN 的失败现象
