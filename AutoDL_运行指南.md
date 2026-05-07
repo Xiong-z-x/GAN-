@@ -4,6 +4,8 @@
 
 本指南面向后续 Remote-SSH 接入 AutoDL 的继续开发。当前推荐方式是：**本地用 GitHub 同步源码，AutoDL 直接 `git pull`，不要反复压缩传输整个项目**。
 
+如果新对话直接进入 AutoDL 且 `/root/autodl-tmp/GAN` 还没有仓库文件，先按 `docs/handoff/AutoDL_新工作区启动指令.md` 建立工作区。不能在文档尚未拉取前要求阅读仓库内 md。
+
 ## 0. 前提边界
 
 - AutoDL 项目根目录默认：`/root/autodl-tmp/GAN`
@@ -37,6 +39,8 @@ git status --short
 ```
 
 根据输出判断是本地实验产物误入工作区，还是代码文件确实被改动。不要使用 `git reset --hard`，除非确认没有需要保留的本地代码。
+
+GitHub 暂时不可用时，可从本地 `D:\GAN` 或 `C:\GAN` 用 `scp` 复制轻量源码和交接文档；具体命令见 `docs/handoff/AutoDL_新工作区启动指令.md`。不要默认复制 `data/`、`outputs/`、`external/`、`GAN_results_images/`、`GAN_new_showcase_results/`。
 
 ## 2. 基础环境准备
 

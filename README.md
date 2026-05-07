@@ -31,6 +31,7 @@ AutoDL 项目目录约定：
 
 新会话或新接手模型必须优先阅读：
 
+0. 如果 AutoDL 还没有仓库文件，先执行 `docs/handoff/AutoDL_新工作区启动指令.md` 中的 GitHub 拉取或 scp 兜底复制。
 1. `docs/handoff/新对话初始化提示词.md`
 2. `docs/handoff/迁移前交接总报告.md`
 3. `docs/handoff/后续模型注意事项.md`
