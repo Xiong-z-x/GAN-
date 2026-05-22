@@ -94,11 +94,12 @@ report/report_assets/facegan_studio/
 
 - 输入预览：检测上传图中的人脸。
 - 动漫风格化：调用 AnimeGANv2 三种权重，可选 CycleGAN Van Gogh。
-- 证件照生成：输出白底、蓝底、红底版本。
-- 造型与姿态：调用 InstantID 生成戴眼镜、职业照、休闲照、不同姿态。
+- 造型与姿态：调用 InstantID / InstantID img2img 做身份保持生成；该功能可能带来写真化或身份漂移，结果必须人工筛选。
+- 轻造型保脸：读取 `data/raw/my_photos/` 中 4 张本人照片，按 InsightFace/InstantID 人脸关键点叠加黑框、金属和圆框眼镜，不重绘五官。
+- GFPGAN 后处理：对既有人像生成结果做人脸修复和清晰化，只作为可选后处理。
 - 项目成果展示：读取已有 DCGAN、StyleGAN3、InstantID 展示素材。
 
-GFPGAN 当前只作为后续可选增强方向；本版本不宣称已经完成 GFPGAN 接入。
+StyleGAN2-ADA 人脸反演 + 潜空间编辑已取消作为当前交付模块：短步数反演身份偏差明显，官方 projector 额外依赖下载不稳定。StyleGAN3 仍保留为官方 FFHQ 预训练 GAN 上限展示。
 
 ## 6. InstantID 前置条件
 

@@ -8,7 +8,8 @@ from .config import AppConfig
 from .modules.anime_style import ANIME_STYLES, run_anime_styles
 from .modules.face_detector import detect_face_preview
 from .modules.gallery import collect_showcase_assets
-from .modules.id_photo import BACKGROUND_LABELS, create_id_photo_variants
+from .modules.gfpgan_postprocess import run_gfpgan_postprocess, select_default_gfpgan_inputs, sync_gfpgan_report_assets
+from .modules.identity_accessories import run_identity_accessory_styles
 from .modules.paths import ProjectPaths
 from .modules.pose_styler import generate_pose_styles
 
@@ -65,36 +66,6 @@ def build_app(config: AppConfig) -> Any:
         except Exception as error:
             return [], None, _format_error(error)
 
-    def run_id_photo(
-        image_path: str | None,
-        background_labels: list[str],
-        size_label: str,
-    ) -> tuple[list[str], str | None, str]:
-        try:
-            image = _require_image(image_path)
-            label_to_key = {label: key for key, label in BACKGROUND_LABELS.items()}
-            backgrounds = [label_to_key[label] for label in background_labels if label in label_to_key]
-            if not backgrounds:
-                backgrounds = ["white", "blue", "red"]
-
-            size_map = {
-                "一寸 413x626": (413, 626),
-                "二寸 626x413": (626, 413),
-                "方形头像 512x512": (512, 512),
-            }
-            size = size_map.get(size_label, (413, 626))
-            run_dir = project_paths.create_run_dir("id_photo")
-            result = create_id_photo_variants(image, run_dir, backgrounds=backgrounds, size=size)
-            project_paths.create_report_run_dir("id_photo", run_dir.name)
-            report_dir = project_paths.report_assets_dir / "id_photo" / run_dir.name
-            report_dir.mkdir(parents=True, exist_ok=True)
-            for path in [*result.variants.values(), result.grid_path, result.metadata_path]:
-                target = report_dir / path.name
-                target.write_bytes(path.read_bytes())
-            return _gallery_items(list(result.variants.values())), str(result.grid_path), f"完成。输出目录：{result.output_dir}"
-        except Exception as error:
-            return [], None, _format_error(error)
-
     def run_pose(
         image_path: str | None,
         count: int,
@@ -118,6 +89,39 @@ def build_app(config: AppConfig) -> Any:
         except Exception as error:
             return [], None, None, _format_error(error)
 
+    def run_gfpgan(
+        image_path: str | None,
+        use_default_inputs: bool,
+        limit: int,
+    ) -> tuple[list[str], str | None, str]:
+        try:
+            inputs: list[Path] = []
+            if image_path:
+                inputs.append(_require_image(image_path))
+            if use_default_inputs:
+                inputs.extend(select_default_gfpgan_inputs(config.project_root, limit=int(limit)))
+            run_dir = project_paths.create_run_dir("gfpgan_postprocess")
+            result = run_gfpgan_postprocess(inputs[: int(limit)], run_dir)
+            report_dir = sync_gfpgan_report_assets(config.project_root, result)
+            return (
+                _gallery_items(result.enhanced_paths),
+                str(result.comparison_grid),
+                f"完成。输出目录：{result.output_dir}\n报告素材：{report_dir}",
+            )
+        except Exception as error:
+            return [], None, _format_error(error)
+
+    def run_accessories() -> tuple[list[str], str | None, str]:
+        try:
+            result = run_identity_accessory_styles(config.project_root, sync_handoff=True)
+            return (
+                _gallery_items(result.image_paths),
+                str(result.grid_path),
+                f"完成。输出目录：{result.output_dir}",
+            )
+        except Exception as error:
+            return [], None, _format_error(error)
+
     def load_showcase() -> tuple[list[tuple[str, str]], str]:
         assets = collect_showcase_assets(config.project_root)
         items = [(str(asset.path), asset.name) for asset in assets]
@@ -132,7 +136,7 @@ def build_app(config: AppConfig) -> Any:
             # FaceGAN Studio
 
             基于 GAN 风格迁移、成熟 GAN 展示和身份保持生成的人脸应用封装。
-            上传图片后可以生成动漫风、证件照、眼镜/造型/不同姿态结果。
+            上传图片后可以生成动漫风、眼镜/造型/不同姿态结果，并可对生成图做 GFPGAN 后处理增强。
             """
         )
 
@@ -161,24 +165,6 @@ def build_app(config: AppConfig) -> Any:
                 outputs=[anime_gallery, anime_grid, anime_status],
             )
 
-        with gr.Tab("证件照生成"):
-            id_input = gr.Image(type="filepath", label="上传人脸图片")
-            id_backgrounds = gr.CheckboxGroup(
-                choices=list(BACKGROUND_LABELS.values()),
-                value=list(BACKGROUND_LABELS.values()),
-                label="背景颜色",
-            )
-            id_size = gr.Dropdown(
-                choices=["一寸 413x626", "二寸 626x413", "方形头像 512x512"],
-                value="一寸 413x626",
-                label="输出尺寸",
-            )
-            id_button = gr.Button("生成证件照")
-            id_gallery = gr.Gallery(label="证件照结果", columns=3, height=460)
-            id_grid = gr.Image(type="filepath", label="证件照拼图")
-            id_status = gr.Textbox(label="状态", lines=3)
-            id_button.click(run_id_photo, inputs=[id_input, id_backgrounds, id_size], outputs=[id_gallery, id_grid, id_status])
-
         with gr.Tab("造型与姿态"):
             pose_input = gr.Image(type="filepath", label="上传人脸图片")
             pose_count = gr.Slider(minimum=4, maximum=16, step=4, value=8, label="生成数量")
@@ -194,6 +180,31 @@ def build_app(config: AppConfig) -> Any:
                 outputs=[pose_gallery, pose_grid, pose_ref_grid, pose_status],
             )
 
+        with gr.Tab("轻造型保脸"):
+            accessory_button = gr.Button("生成四张本人照片眼镜轻造型")
+            accessory_gallery = gr.Gallery(label="轻造型结果", columns=4, height=620)
+            accessory_grid = gr.Image(type="filepath", label="结果拼图")
+            accessory_status = gr.Textbox(label="状态", lines=3)
+            accessory_button.click(
+                run_accessories,
+                inputs=[],
+                outputs=[accessory_gallery, accessory_grid, accessory_status],
+            )
+
+        with gr.Tab("GFPGAN 后处理"):
+            gfpgan_input = gr.Image(type="filepath", label="可选：上传单张待增强人像")
+            gfpgan_use_default = gr.Checkbox(value=True, label="同时处理最近的项目输出结果")
+            gfpgan_limit = gr.Slider(minimum=1, maximum=12, step=1, value=6, label="最多处理张数")
+            gfpgan_button = gr.Button("运行 GFPGAN 增强")
+            gfpgan_gallery = gr.Gallery(label="增强后结果", columns=3, height=520)
+            gfpgan_grid = gr.Image(type="filepath", label="增强前后对比拼图")
+            gfpgan_status = gr.Textbox(label="状态", lines=4)
+            gfpgan_button.click(
+                run_gfpgan,
+                inputs=[gfpgan_input, gfpgan_use_default, gfpgan_limit],
+                outputs=[gfpgan_gallery, gfpgan_grid, gfpgan_status],
+            )
+
         with gr.Tab("项目成果展示"):
             showcase_button = gr.Button("加载已有成果")
             showcase_gallery = gr.Gallery(label="已有成果", columns=2, height=680)
@@ -203,7 +214,7 @@ def build_app(config: AppConfig) -> Any:
         gr.Markdown(
             """
             输出默认保存到 `outputs/facegan_studio/`，报告素材同步到 `report/report_assets/facegan_studio/`。
-            证件照和身份保持生成均为课程技术演示结果，不作为正式证件或身份认证用途。
+            身份保持生成均为课程技术演示结果，不作为正式身份认证用途。
             """
         )
 

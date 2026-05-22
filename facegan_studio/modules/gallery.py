@@ -55,16 +55,27 @@ def collect_showcase_assets(project_root: str | Path) -> list[ShowcaseAsset]:
                 report_assets / "instantid_myface_pose" / "pose_reference_grid_4x4.png",
                 handoff_assets / "pose_reference_grid_4x4.png",
             ],
-            "展示个人照片、StyleGAN3 图和公开数据人像构成的姿态参考。",
+            "展示历史 InstantID 姿态参考来源；当前保脸轻造型结果不依赖该图进入报告。",
         ),
         (
-            "InstantID 身份保持结果",
+            "轻造型保脸结果",
             [
+                report_assets / "facegan_studio" / "identity_accessory" / "20260507_204628" / "identity_accessory_grid.png",
+                report_assets / "facegan_studio" / "identity_accessory" / "identity_accessory_grid.png",
                 new_assets / "instantid_myface_pose" / "my_face_pose_grid_4x4.png",
                 report_assets / "instantid_myface_pose" / "my_face_pose_grid_4x4.png",
+                report_assets / "facegan_studio" / "pose_style" / "20260507_181205" / "pose_style_grid.png",
                 handoff_assets / "my_face_pose_grid_4x4.png",
             ],
-            "展示固定个人身份向量后的不同姿态和场景生成。",
+            "展示四张本人照片在不重绘五官前提下叠加眼镜轻造型的结果。",
+        ),
+        (
+            "GFPGAN 后处理对比",
+            [
+                report_assets / "facegan_studio" / "gfpgan_postprocess" / "gfpgan_comparison_grid.png",
+                handoff_assets / "gfpgan_comparison_grid.png",
+            ],
+            "展示 GFPGAN 对既有人像生成结果的人脸修复和清晰化后处理。",
         ),
         (
             "AnimeGANv2 多风格",

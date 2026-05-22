@@ -11,4 +11,12 @@ matplotlib
 opencv-python-headless
 dominate
 pytorch-fid
-gradio
+gradio==4.44.1
+fastapi==0.112.2
+pydantic==2.10.6
+huggingface-hub==0.24.7
+gfpgan==1.3.8
+basicsr==1.4.2
+facexlib==0.3.0
+lmdb
+yapf
